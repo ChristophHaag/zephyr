@@ -79,7 +79,7 @@ module.exports = function(app, passport) {
                         });
 
                         var jwtToken = jwt.sign({
-                            user: user.steam.name,
+                            user: req.user.steam.name,
                             device: device,
                             room: hmac.read().toString('hex')
                         }, config.jwtSecret, {
@@ -96,7 +96,7 @@ module.exports = function(app, passport) {
                         res.json(result);
                     } else {
                         var jwtToken = jwt.sign({
-                            user: user.steam.name,
+                            user: req.user.steam.name,
                             device: device,
                             room: hmac.read().toString('hex')
                         }, config.jwtSecret, {
