@@ -11,7 +11,7 @@ var flash    = require('connect-flash');
 var morgan       = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser   = require('body-parser');
-var session      = require('express-session');
+var session      = require('cookie-session');
 var configDB     = require('./config/database');
 
 mongoose.connect(configDB.url);
