@@ -31,7 +31,7 @@ public class LoginActivity extends BaseActivity {
         super.onResume();
         if (TokenUtils.getInstance(this).doesTokenExist()) {
             Log.i(TAG, "Logged in, proceeding to MainActivity.");
-            Intent i = new Intent(LoginActivity.this, MainActivity2.class);
+            Intent i = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(i);
             finish();
         }

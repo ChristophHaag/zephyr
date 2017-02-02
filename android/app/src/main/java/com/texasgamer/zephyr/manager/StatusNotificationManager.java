@@ -10,7 +10,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 
 import com.texasgamer.zephyr.R;
-import com.texasgamer.zephyr.activity.MainActivity2;
+import com.texasgamer.zephyr.activity.MainActivity;
 import com.texasgamer.zephyr.socket.ConnectionStatus;
 
 public class StatusNotificationManager {
@@ -53,7 +53,7 @@ public class StatusNotificationManager {
     }
 
     private static void showNotification(Context context, String message, int priority) {
-        Intent notificationIntent = new Intent(context, MainActivity2.class);
+        Intent notificationIntent = new Intent(context, MainActivity.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
                 | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent intent = PendingIntent.getActivity(context, 0,

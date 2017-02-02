@@ -132,7 +132,7 @@ public class PreferencesActivity extends AppCompatPreferenceActivity {
     @Override
     public void onBackPressed() {
         if(basePreferenceActivity) {
-            Intent i = new Intent(PreferencesActivity.this, MainActivity2.class);
+            Intent i = new Intent(PreferencesActivity.this, MainActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
         } else {

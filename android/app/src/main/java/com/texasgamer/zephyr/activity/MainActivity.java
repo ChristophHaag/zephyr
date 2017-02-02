@@ -28,7 +28,7 @@ import com.texasgamer.zephyr.util.TokenUtils;
 import com.texasgamer.zephyr.view.RoundedTransformation;
 import io.fabric.sdk.android.Fabric;
 
-public class MainActivity2 extends BaseActivity {
+public class MainActivity extends BaseActivity {
 
     private TokenUtils mTokenUtils;
     private MainAcvitiyReceiver mainAcvitiyReceiver;
@@ -41,7 +41,7 @@ public class MainActivity2 extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Fabric.with(this, new Crashlytics());
-        setContentView(R.layout.activity_main2);
+        setContentView(R.layout.activity_main);
 
         mTokenUtils = TokenUtils.getInstance(this);
 
@@ -61,7 +61,7 @@ public class MainActivity2 extends BaseActivity {
         if (!mTokenUtils.doesTokenExist()) {
             Log.i(TAG, "Logged out, going to LoginActivity.");
             Toast.makeText(this, getString(R.string.logged_out_toast), Toast.LENGTH_SHORT).show();
-            Intent i = new Intent(MainActivity2.this, LoginActivity.class);
+            Intent i = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(i);
             finish();
             return;
@@ -101,7 +101,7 @@ public class MainActivity2 extends BaseActivity {
             case R.id.settings:
                 mMetricsManager.logEvent(R.string.analytics_tap_settings, null);
 
-                Intent i = new Intent(MainActivity2.this, PreferencesActivity.class);
+                Intent i = new Intent(MainActivity.this, PreferencesActivity.class);
                 startActivity(i);
                 return true;
         }
