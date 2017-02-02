@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.Snackbar;
@@ -65,13 +66,21 @@ public class MainActivity extends BaseActivity {
     public void onResume() {
         super.onResume();
         if (!mTokenUtils.doesTokenExist()) {
-            Log.i(TAG, "Logged out, going to LoginActivity.");
+            if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.pref_first_run), true)) {
+                Log.i(TAG, "Logged out, going to LoginActivity.");
+            }
+
             Toast.makeText(this, getString(R.string.logged_out_toast), Toast.LENGTH_SHORT).show();
             Intent i = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(i);
             finish();
             return;
         }
+
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .edit()
+                .putBoolean(getString(R.string.pref_first_run), false)
+                .apply();
 
         mainAcvitiyReceiver = new MainAcvitiyReceiver();
         IntentFilter filter = new IntentFilter();

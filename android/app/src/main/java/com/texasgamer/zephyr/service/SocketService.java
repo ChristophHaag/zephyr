@@ -35,7 +35,6 @@ public class SocketService extends Service {
     private Socket socket;
     private String serverAddr;
     private boolean connected = false;
-    private boolean reconnect = false;
 
     @Override
     public void onCreate() {
@@ -65,11 +64,6 @@ public class SocketService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(!serverAddr.isEmpty()) {
-            Log.i(TAG, "Connecting to saved address " + serverAddr + "...");
-            connect(serverAddr);
-        }
-
         return START_STICKY;
     }
 
@@ -82,6 +76,11 @@ public class SocketService extends Service {
     private void connect(String address) {
         if(connected) {
             Log.i(TAG, "Already connected to a server! Disconnect first.");
+            return;
+        }
+
+        if (!mTokenUtils.doesTokenExist()) {
+            Log.i(TAG, "Not logged in! Login before connecting.");
             return;
         }
 
@@ -154,13 +153,6 @@ public class SocketService extends Service {
                 connected = false;
 
                 StatusNotificationManager.showNotification(getBaseContext(), ConnectionStatus.DISCONNECTED);
-
-                if(reconnect) {
-                    Log.i(TAG, "Reconnecting to server...");
-                    StatusNotificationManager.showNotification(getBaseContext(), ConnectionStatus.CONNECTING);
-                    reconnect = false;
-                    connect(serverAddr);
-                }
             }
         }).on("unauthorized", new Emitter.Listener() {
             @Override
@@ -189,6 +181,10 @@ public class SocketService extends Service {
                 StatusNotificationManager.showNotification(getBaseContext(), ConnectionStatus.CONNECTED);
             }
         });
+    }
+
+    private boolean isSmartConnectEnabled() {
+        return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.pref_smart_connect), true);
     }
 
     class SocketServiceReceiver extends BroadcastReceiver {
