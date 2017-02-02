@@ -8,12 +8,12 @@
 
     <application
         android:allowBackup="true"
+        android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:fullBackupContent="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.MainActivity">
+        <activity android:name=".activity.MainActivity2">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -24,10 +24,10 @@
         <activity
             android:name=".activity.PreferencesActivity"
             android:label="@string/title_activity_preferences"
-            android:parentActivityName=".activity.MainActivity">
+            android:parentActivityName=".activity.MainActivity2">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.MainActivity" />
+                android:value=".activity.MainActivity2" />
         </activity>
 
         <service android:name=".service.SocketService" />
@@ -40,19 +40,25 @@
             </intent-filter>
         </service>
 
-        <receiver android:name="com.texasgamer.zephyr.receiver.WiFiReceiver">
+        <receiver android:name=".receiver.WiFiReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver android:name="com.texasgamer.zephyr.receiver.BootReceiver">
+        <receiver android:name=".receiver.BootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="348ea4157a78702786815cda4e5208a029342b60" />
+
+        <activity
+            android:name=".activity.WebLoginActivity"
+            android:label="@string/web_login_activity_title" />
+        <activity android:name=".activity.LoginActivity" />
     </application>
 
 </manifest>

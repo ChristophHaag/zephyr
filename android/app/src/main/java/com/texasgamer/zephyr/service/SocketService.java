@@ -13,9 +13,10 @@ import android.util.Log;
 
 import com.texasgamer.zephyr.manager.MetricsManager;
 import com.texasgamer.zephyr.R;
-import com.texasgamer.zephyr.util.NetworkUtils;
+import com.texasgamer.zephyr.manager.StatusNotificationManager;
+import com.texasgamer.zephyr.socket.ConnectionStatus;
+import com.texasgamer.zephyr.util.TokenUtils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,10 +30,10 @@ public class SocketService extends Service {
 
     private SocketServiceReceiver serviceReceiver;
     private MetricsManager mMetricsManager;
+    private TokenUtils mTokenUtils;
 
     private Socket socket;
     private String serverAddr;
-    private String clientId;
     private boolean connected = false;
     private boolean reconnect = false;
 
@@ -42,12 +43,15 @@ public class SocketService extends Service {
         if(!connected) {
             serviceReceiver = new SocketServiceReceiver();
             mMetricsManager = new MetricsManager(this);
+            mTokenUtils = TokenUtils.getInstance(this);
 
             IntentFilter filter = new IntentFilter();
             filter.addAction("com.texasgamer.zephyr.SOCKET_SERVICE");
             registerReceiver(serviceReceiver, filter);
 
             serverAddr = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.pref_last_addr), "");
+
+            StatusNotificationManager.showNotification(this, ConnectionStatus.DISCONNECTED);
         } else {
             Log.w(TAG, "onCreate() called while already connected!");
         }
@@ -81,12 +85,6 @@ public class SocketService extends Service {
             return;
         }
 
-        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.pref_smart_connect), true) && !NetworkUtils.isConnectedToWiFi(this)) {
-            Log.i(TAG, "Not connected to WiFi, not attempting to connect!");
-        } else if(!NetworkUtils.isConnectedToWiFi(this)) {
-            Log.i(TAG, "Not connected to WiFi, but trying to connect anyways...");
-        }
-
         Log.i(TAG, "Connecting to " + address + "...");
 
         serverAddr = address;
@@ -104,11 +102,15 @@ public class SocketService extends Service {
         if(socket != null) {
             setUpEvents();
             socket.connect();
+            StatusNotificationManager.showNotification(this, ConnectionStatus.CONNECTING);
         }
     }
 
     private void disconnect() {
         Log.i(TAG, "Disconnecting...");
+
+        StatusNotificationManager.showNotification(this, ConnectionStatus.DISCONNECTING);
+
         Bundle b = new Bundle();
         b.putString(getString(R.string.analytics_param_server_addr), serverAddr);
         mMetricsManager.logEvent(R.string.analytics_event_disconnect, b);
@@ -118,9 +120,6 @@ public class SocketService extends Service {
     }
 
     private void setUpEvents() {
-        clientId = PreferenceManager.getDefaultSharedPreferences(getBaseContext())
-                .getString(getString(R.string.pref_device_name), getString(R.string.pref_default_device_name));
-
         socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -128,73 +127,16 @@ public class SocketService extends Service {
                 b.putString(getString(R.string.analytics_param_server_addr), serverAddr);
                 mMetricsManager.logEvent(R.string.analytics_event_version, b);
 
-                socket.emit("version", getVersionInfo().toString());
-            }
-        }).on(clientId, new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
+                JSONObject token = new JSONObject();
                 try {
-                    JSONObject msg = new JSONObject(args[0].toString());
-                    JSONObject metadata = msg.getJSONObject("metadata");
-                    if(metadata.getString("type").equals("version") && metadata.getInt("version") == 1) {
-                        Log.i(TAG, "Connected to server at " + serverAddr);
-
-                        Bundle b = new Bundle();
-                        b.putString(getString(R.string.analytics_param_server_addr), serverAddr);
-                        mMetricsManager.logEvent(R.string.analytics_event_connected, b);
-
-                        Intent i = new  Intent("com.texasgamer.zephyr.MAIN_ACTIVITY");
-                        i.putExtra("type", "connected");
-                        i.putExtra("address", serverAddr);
-                        sendBroadcast(i);
-                        connected = true;
-
-                        PreferenceManager.getDefaultSharedPreferences(getBaseContext()).edit().putString(getString(R.string.pref_last_addr), serverAddr).apply();
-                    } else if(metadata.getString("type").equals("notification-response") && metadata.getInt("version") == 1) {
-                        if(msg.getJSONObject("payload").getBoolean("result")) {
-                            Log.i(TAG, "Notification sent.");
-
-                            Bundle b = new Bundle();
-                            b.putString(getString(R.string.analytics_param_server_addr), serverAddr);
-                            mMetricsManager.logEvent(R.string.analytics_event_notif_sent, b);
-
-                            Intent i = new  Intent("com.texasgamer.zephyr.MAIN_ACTIVITY");
-                            i.putExtra("type", "notif-sent");
-                            sendBroadcast(i);
-                        } else {
-                            Log.i(TAG, "Notification failed.");
-
-                            Bundle b = new Bundle();
-                            b.putString(getString(R.string.analytics_param_server_addr), serverAddr);
-                            mMetricsManager.logEvent(R.string.analytics_event_notif_failed, b);
-
-                            Intent i = new  Intent("com.texasgamer.zephyr.MAIN_ACTIVITY");
-                            i.putExtra("type", "notif-failed");
-                            sendBroadcast(i);
-                        }
-                    }
+                    String t = TokenUtils.getInstance(getBaseContext()).getAuthToken(getBaseContext());
+                    token.put("token", t);
+                    // TODO: If t == null, something went wrong and we want to alert the user
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-            }
-        }).on("broadcast", new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
-                try {
-                    JSONObject msg = new JSONObject(args[0].toString());
-                    JSONObject metadata = msg.getJSONObject("metadata");
-                    if(metadata.getString("type").equals("broadcast-ping")) {
-                        Log.i(TAG, "Responding to ping...");
 
-                        Bundle b = new Bundle();
-                        b.putString(getString(R.string.analytics_param_server_addr), serverAddr);
-                        mMetricsManager.logEvent(R.string.analytics_event_ping, b);
-
-                        socket.emit("broadcast", getPong(metadata.getString("from")).toString());
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                socket.emit("authenticate", token);
             }
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
             @Override
@@ -211,63 +153,42 @@ public class SocketService extends Service {
                 sendBroadcast(i);
                 connected = false;
 
+                StatusNotificationManager.showNotification(getBaseContext(), ConnectionStatus.DISCONNECTED);
+
                 if(reconnect) {
                     Log.i(TAG, "Reconnecting to server...");
+                    StatusNotificationManager.showNotification(getBaseContext(), ConnectionStatus.CONNECTING);
                     reconnect = false;
                     connect(serverAddr);
                 }
             }
+        }).on("unauthorized", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.i(TAG, args[0].toString());
+                try {
+                    JSONObject error = new JSONObject(args[0].toString());
+                    if (error.getString("message").equals("jwt expired")) {
+                        // TODO: Renew expired token and retry
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                StatusNotificationManager.showNotification(getBaseContext(), ConnectionStatus.ERROR, R.string.connection_status_error_auth);
+            }
+        }).on("authenticated", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Intent i = new  Intent("com.texasgamer.zephyr.MAIN_ACTIVITY");
+                i.putExtra("type", "connected");
+                i.putExtra("address", serverAddr);
+                sendBroadcast(i);
+                connected = true;
+
+                StatusNotificationManager.showNotification(getBaseContext(), ConnectionStatus.CONNECTED);
+            }
         });
-    }
-
-    private JSONObject getVersionInfo() {
-        clientId = PreferenceManager.getDefaultSharedPreferences(getBaseContext())
-                .getString(getString(R.string.pref_device_name), getString(R.string.pref_default_device_name));
-
-        try {
-            JSONObject versionInfo = new JSONObject();
-            JSONObject metadata = new JSONObject();
-            metadata.put("version", 1);
-            metadata.put("type", "version");
-            metadata.put("from", clientId);
-            metadata.put("to", "");
-            JSONObject payload = new JSONObject();
-            payload.put("name", "Android Client");
-            payload.put("version", getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
-            payload.put("versionCode", getPackageManager().getPackageInfo(getPackageName(), 0).versionCode);
-            payload.put("versions", new JSONArray());
-            versionInfo.put("metadata", metadata);
-            versionInfo.put("payload", payload);
-
-            return versionInfo;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return new JSONObject();
-    }
-
-    private JSONObject getPong(String to) {
-        clientId = PreferenceManager.getDefaultSharedPreferences(getBaseContext())
-                .getString(getString(R.string.pref_device_name), getString(R.string.pref_default_device_name));
-
-        try {
-            JSONObject pong = new JSONObject();
-            JSONObject metadata = new JSONObject();
-            metadata.put("version", 1);
-            metadata.put("type", "broadcast-pong");
-            metadata.put("from", clientId);
-            metadata.put("to", to);
-            JSONObject payload = new JSONObject();
-            pong.put("metadata", metadata);
-            pong.put("payload", payload);
-
-            return pong;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return new JSONObject();
     }
 
     class SocketServiceReceiver extends BroadcastReceiver {
@@ -277,10 +198,9 @@ public class SocketService extends Service {
             String type = intent.getStringExtra("type");
             if(type.equals("notification")) {
                 if(connected) {
-                    int id = intent.getIntExtra("id", 0);
                     String title = intent.getStringExtra("title");
                     String text = intent.getStringExtra("text");
-                    socket.emit("notification", buildNotificationJSONObject(id, title, text).toString());
+                    socket.emit(mTokenUtils.getRoom() + "-notifications", buildNotificationJSONObject(title, text, ""));
                 }
             } else if(type.equals("connect")) {
                 if(connected)
@@ -297,44 +217,24 @@ public class SocketService extends Service {
                 sendBroadcast(i);
             } else if(type.equals("test")) {
                 if(connected) {
-                    socket.emit("notification", buildNotificationJSONObject(0, "Test Notification",
-                            "This is a test notification.").toString());
+                    socket.emit("notification", buildNotificationJSONObject("Test Notification",
+                            "This is a test notification.", "").toString());
                 }
-            } else if(type.equals("update-devices")) {
-                clientId = PreferenceManager.getDefaultSharedPreferences(getBaseContext())
-                        .getString(getString(R.string.pref_device_name), getString(R.string.pref_default_device_name));
-
-                if(connected) {
-                    Log.i(TAG, "Client ID updated, reconnecting to server...");
-                    reconnect = true;
-
-                    disconnect();
+            } else if (type.equals("update-notification")) {
+                if (connected) {
+                    StatusNotificationManager.showNotification(getBaseContext(), ConnectionStatus.CONNECTED);
                 } else {
-                    Log.i(TAG, "Client ID updated, will apply on next connection.");
+                    StatusNotificationManager.showNotification(getBaseContext(), ConnectionStatus.DISCONNECTED);
                 }
             }
         }
 
-        private JSONObject buildNotificationJSONObject(int id, String title, String text) {
-            clientId = PreferenceManager.getDefaultSharedPreferences(getBaseContext())
-                    .getString(getString(R.string.pref_device_name), getString(R.string.pref_default_device_name));
-
+        private JSONObject buildNotificationJSONObject(String title, String text, String icon) {
             try {
                 JSONObject notif = new JSONObject();
-                JSONObject metadata = new JSONObject();
-                metadata.put("version", 1);
-                metadata.put("type", "notification");
-                metadata.put("from", clientId);
-                metadata.put("to", "");
-
-                JSONObject payload = new JSONObject();
-                payload.put("id", id);
-                payload.put("title", title);
-                payload.put("text", text);
-                payload.put("device", PreferenceManager.getDefaultSharedPreferences(getBaseContext())
-                        .getString(getString(R.string.pref_device_name), getString(R.string.pref_default_device_name)));
-                notif.put("metadata", metadata);
-                notif.put("payload", payload);
+                notif.put("title", title);
+                notif.put("text", text);
+                notif.put("icon", icon);
 
                 return notif;
             } catch (JSONException e) {

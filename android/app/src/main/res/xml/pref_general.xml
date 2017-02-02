@@ -7,6 +7,12 @@
         android:summary="@string/pref_description_smart_connect"
         android:title="@string/pref_title_smart_connect" />
 
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="@string/pref_disconnect_notif"
+        android:summary="@string/pref_description_disconnect_notif"
+        android:title="@string/pref_title_disconnect_notif" />
+
     <EditTextPreference
         android:capitalize="words"
         android:defaultValue="@string/pref_default_device_name"
@@ -18,6 +24,7 @@
         android:title="@string/pref_title_device_name" />
 
     <PreferenceScreen
-        android:key="@string/pref_account" />
+        android:key="@string/pref_account"
+        android:title="@string/pref_account_logout" />
 
 </PreferenceScreen>

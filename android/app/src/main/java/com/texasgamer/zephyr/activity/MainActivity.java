@@ -28,7 +28,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.texasgamer.zephyr.Constants;
 import com.texasgamer.zephyr.manager.ConfigManager;
-import com.texasgamer.zephyr.manager.LoginManager;
 import com.texasgamer.zephyr.R;
 import com.texasgamer.zephyr.service.SocketService;
 
@@ -36,7 +35,6 @@ public class MainActivity extends BaseActivity {
 
     public static final int RC_SIGN_IN = 16;
 
-    private LoginManager mLoginManager;
     private MainAcvitiyReceiver mainAcvitiyReceiver;
     private BottomSheetBehavior bottomSheetBehavior;
 
@@ -49,7 +47,6 @@ public class MainActivity extends BaseActivity {
         setContentView(R.layout.activity_main);
 
         mConfigManager = new ConfigManager(this);
-        mLoginManager = new LoginManager(this);
 
         checkIfFirstRun();
 
@@ -117,17 +114,10 @@ public class MainActivity extends BaseActivity {
 
     @SuppressWarnings("ConstantConditions")
     private void setupUi() {
-        if (mLoginManager.shouldShowLoginCard()) {
-            showLoginCard();
-        } else if (mLoginManager.isLoggedIn()) {
-            loggedIn();
-        }
-
         findViewById(R.id.login_card_btn_no).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 hideLoginCard();
-                mLoginManager.setLoginCardHidden(true);
                 mMetricsManager.logEvent(R.string.analytics_tap_login_card_hide, null);
             }
         });
@@ -284,8 +274,6 @@ public class MainActivity extends BaseActivity {
 
     private void showProfileCard() {
         findViewById(R.id.profile_card).setVisibility(View.VISIBLE);
-        ((TextView) findViewById(R.id.profile_card_title)).setText(mLoginManager.getUser().getDisplayName());
-        ((TextView) findViewById(R.id.profile_card_text)).setText(mLoginManager.getUser().getEmail());
     }
 
     private void hideProfileCard() {
@@ -294,8 +282,7 @@ public class MainActivity extends BaseActivity {
 
     private void setupFirebaseDb() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReferenceFromUrl(Constants.FIREBASE_ADDRESS +
-                mLoginManager.getUser().getUid() + "/" + "server_address");
+        DatabaseReference myRef = database.getReferenceFromUrl(Constants.FIREBASE_ADDRESS + "/" + "server_address");
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -331,7 +318,7 @@ public class MainActivity extends BaseActivity {
                     builder.show();
                 }
 
-                mMetricsManager.logLogin(mLoginManager.getUser().getProviderId(), true);
+                mMetricsManager.logLogin("", true);
             }
         }
     }
