@@ -3,8 +3,8 @@ package com.texasgamer.zephyr;
 public class Constants {
 
     /* Zephyr */
-    public static final String ZEPHYR_BASE_WEB_URL = "http://10.0.2.2:8080";
-    public static final String ZEPHYR_BASE_WS_URL = "10.0.2.2:8080";
+    public static final String ZEPHYR_BASE_WEB_URL = "http://zephyr-server.herokuapp.com";
+    public static final String ZEPHYR_BASE_WS_URL = "zephyr-server.herokuapp.com";
     public static final String ZEPHYR_STEAM_STORE = "http://store.steampowered.com/app/495000/";
     public static final String ZEPHYR_SUBREDDIT = "https://reddit.com/r/zephyr_vr";
     public static final long ZEPHYR_TOKEN_CHECK_TIME = 15 * 60 * 1000; // 15 minutes
