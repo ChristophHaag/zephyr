@@ -78,37 +78,19 @@ module.exports = function(app, passport) {
                                 throw err;
                         });
 
-                        var jwtToken = jwt.sign({
-                            user: req.user.steam.name,
-                            device: device,
-                            room: hmac.read().toString('hex')
-                        }, config.jwtSecret, {
-                            expiresIn: "15m"
-                        });
-
                         var result = {
                             name: req.user.steam.name,
                             avatar: req.user.steam.avatar,
                             room: hmac.read().toString('hex'),
-                            token: newToken.token,
-                            jwtToken: jwtToken
+                            token: newToken.token
                         };
                         res.json(result);
                     } else {
-                        var jwtToken = jwt.sign({
-                            user: req.user.steam.name,
-                            device: device,
-                            room: hmac.read().toString('hex')
-                        }, config.jwtSecret, {
-                            expiresIn: "15m"
-                        });
-
                         var result = {
                             name: req.user.steam.name,
                             avatar: req.user.steam.avatar,
                             room: hmac.read().toString('hex'),
-                            token: token.token,
-                            jwtToken: jwtToken
+                            token: token.token
                         };
                         res.json(result);
                     }
