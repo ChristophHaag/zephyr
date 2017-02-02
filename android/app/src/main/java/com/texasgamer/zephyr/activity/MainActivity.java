@@ -34,6 +34,9 @@ public class MainActivity extends BaseActivity {
     private MainAcvitiyReceiver mainAcvitiyReceiver;
     private BottomSheetBehavior mBottomSheetBehavior;
 
+    private Button mConnectBtn;
+    private TextView mStatusText;
+
     private final String mServerAddr = Constants.ZEPHYR_BASE_WS_URL;
     private boolean mConnected;
 
@@ -44,6 +47,9 @@ public class MainActivity extends BaseActivity {
         setContentView(R.layout.activity_main);
 
         mTokenUtils = TokenUtils.getInstance(this);
+
+        mConnectBtn = (Button) findViewById(R.id.connect_btn);
+        mStatusText = (TextView) findViewById(R.id.status_msg);
 
         if (mTokenUtils.doesTokenExist()) {
             populateInterface();
@@ -156,7 +162,15 @@ public class MainActivity extends BaseActivity {
     private void updateConnectBtn() {
         runOnUiThread(new Runnable() {
             public void run() {
-                ((Button) findViewById(R.id.connect_btn)).setText(mConnected ? R.string.btn_disconnect : R.string.btn_connect);
+                mConnectBtn.setText(mConnected ? R.string.btn_disconnect : R.string.btn_connect);
+            }
+        });
+    }
+
+    private void updateStatusText() {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                mStatusText.setText(mConnected ? R.string.connection_status_connected : R.string.connection_status_disconnected);
             }
         });
     }
@@ -224,6 +238,7 @@ public class MainActivity extends BaseActivity {
                 case "connected":
                     mConnected = true;
                     updateConnectBtn();
+                    updateStatusText();
                     if (!intent.getBooleanExtra("silent", false)) {
                         Snackbar.make(findViewById(R.id.main_content), R.string.snackbar_connected, Snackbar.LENGTH_SHORT).show();
                     }
@@ -231,6 +246,7 @@ public class MainActivity extends BaseActivity {
                 case "disconnected":
                     mConnected = false;
                     updateConnectBtn();
+                    updateStatusText();
                     if (!intent.getBooleanExtra("silent", false)) {
                         Snackbar.make(findViewById(R.id.main_content), R.string.snackbar_disconnected, Snackbar.LENGTH_SHORT).show();
                     }

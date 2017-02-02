@@ -43,7 +43,6 @@
     <string name="steam_hint_text">Download to get notifications in VR.</string>
     <string name="reddit_hint_title">Join the Subreddit</string>
     <string name="reddit_hint_text">Get support and more on /r/zephyr_vr.</string>
-    <string name="status_not_connected">Not connected</string>
     <string name="logged_out_toast">You\'ve been logged out.</string>
 
     <!-- LoginActivity -->
