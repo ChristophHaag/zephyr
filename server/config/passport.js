@@ -1,4 +1,3 @@
-var LocalStrategy   = require('passport-local').Strategy;
 var SteamStrategy = require('passport-steam').Strategy;
 var User = require('../app/models/user');
 var configAuth = require('./auth');
