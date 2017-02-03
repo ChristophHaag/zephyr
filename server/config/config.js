@@ -1,7 +1,8 @@
 var config = {};
 
-// Port
+// Express
 config.port = process.env.PORT || 8080;
+config.expressLogging = process.env.EXPRESS_LOGGING || false;
 
 // Secrets
 config.sessionSecret = process.env.SESSION_SECRET || 'SESSION_SECRET';
