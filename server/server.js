@@ -18,7 +18,7 @@ mongoose.connect(configDB.url);
 
 require('./config/passport')(passport);
 
-if (config.expressLogging) {}
+if (config.expressLogging) {
 	app.use(morgan('dev'));
 }
 
