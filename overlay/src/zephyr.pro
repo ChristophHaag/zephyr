@@ -18,11 +18,10 @@ HEADERS  += overlaywidget.h \
 
 FORMS    += overlaywidget.ui
 
-INCLUDEPATH += ../headers
-INCLUDEPATH += ../../../socketio-cpp/lib/websocketpp
-INCLUDEPATH += ../../../socketio-cpp/lib/rapidjson/include
+INCLUDEPATH += ../../websocketpp
+INCLUDEPATH += ../../rapidjson/include
 
-LIBS += -L../lib/win32 -lopenvr_api -lboost
+LIBS += -L../lib/win32 -lopenvr_api -lboost_system
 
 DESTDIR = ../bin/win32
 
