@@ -3,8 +3,6 @@ package com.texasgamer.zephyr.manager;
 import android.content.Context;
 import android.preference.PreferenceManager;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.texasgamer.zephyr.R;
 
 public class LoginManager {
@@ -25,13 +23,7 @@ public class LoginManager {
         if (!mConfigManager.isLoginEnabled()) {
             return false;
         }
-
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        return auth.getCurrentUser() != null;
-    }
-
-    public FirebaseUser getUser() {
-        return FirebaseAuth.getInstance().getCurrentUser();
+        return true; //TODO: whatever
     }
 
     public boolean isLoginCardHidden() {

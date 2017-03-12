@@ -19,13 +19,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.firebase.ui.auth.AuthUI;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.texasgamer.zephyr.Constants;
 import com.texasgamer.zephyr.manager.ConfigManager;
 import com.texasgamer.zephyr.manager.LoginManager;
@@ -129,30 +122,6 @@ public class MainActivity extends BaseActivity {
                 hideLoginCard();
                 mLoginManager.setLoginCardHidden(true);
                 mMetricsManager.logEvent(R.string.analytics_tap_login_card_hide, null);
-            }
-        });
-
-        findViewById(R.id.profile_card_btn_logout).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AuthUI.getInstance(FirebaseApp.getInstance())
-                        .signOut(MainActivity.this);
-                loggedOut();
-                mMetricsManager.logEvent(R.string.analytics_tap_profile_card_logout, null);
-            }
-        });
-
-        findViewById(R.id.login_card_btn_ok).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivityForResult(
-                        AuthUI.getInstance(FirebaseApp.getInstance())
-                                .createSignInIntentBuilder()
-                                .setLogo(R.mipmap.ic_launcher)
-                                .setProviders(AuthUI.EMAIL_PROVIDER, AuthUI.GOOGLE_PROVIDER)
-                                .build(),
-                        RC_SIGN_IN);
-                mMetricsManager.logEvent(R.string.analytics_tap_login_card_login, null);
             }
         });
 
@@ -265,7 +234,6 @@ public class MainActivity extends BaseActivity {
         hideLoginCard();
         showProfileCard();
 
-        setupFirebaseDb();
     }
 
     private void loggedOut() {
@@ -284,36 +252,10 @@ public class MainActivity extends BaseActivity {
 
     private void showProfileCard() {
         findViewById(R.id.profile_card).setVisibility(View.VISIBLE);
-        ((TextView) findViewById(R.id.profile_card_title)).setText(mLoginManager.getUser().getDisplayName());
-        ((TextView) findViewById(R.id.profile_card_text)).setText(mLoginManager.getUser().getEmail());
     }
 
     private void hideProfileCard() {
         findViewById(R.id.profile_card).setVisibility(View.GONE);
-    }
-
-    private void setupFirebaseDb() {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReferenceFromUrl(Constants.FIREBASE_ADDRESS +
-                mLoginManager.getUser().getUid() + "/" + "server_address");
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String value = dataSnapshot.getValue(String.class);
-                Log.d(TAG, "Server address from Firebase: " + value);
-
-                if (value != null && !connected) {
-                    EditText serverAddressField = ((EditText) findViewById(R.id.serverAddrField));
-                    serverAddressField.setText("");
-                    serverAddressField.append(value);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Failed to read value.", error.toException());
-            }
-        });
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -331,7 +273,6 @@ public class MainActivity extends BaseActivity {
                     builder.show();
                 }
 
-                mMetricsManager.logLogin(mLoginManager.getUser().getProviderId(), true);
             }
         }
     }

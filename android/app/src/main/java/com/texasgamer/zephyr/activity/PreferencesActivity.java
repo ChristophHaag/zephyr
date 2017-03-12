@@ -30,10 +30,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebView;
 
-import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.FirebaseApp;
 import com.texasgamer.zephyr.manager.ConfigManager;
 import com.texasgamer.zephyr.manager.LoginManager;
 import com.texasgamer.zephyr.manager.MetricsManager;
@@ -224,7 +220,6 @@ public class PreferencesActivity extends AppCompatPreferenceActivity {
                 ((PreferenceScreen) findPreference(getString(R.string.pref_header_general))).removePreference(acctPref);
             } else if (mLoginManager.isLoggedIn()) {
                 acctPref.setTitle(R.string.pref_account_logout);
-                acctPref.setSummary(mLoginManager.getUser().getDisplayName());
             } else {
                 acctPref.setTitle(R.string.pref_account_login);
                 acctPref.setSummary(R.string.pref_account_login_summary);
@@ -234,22 +229,7 @@ public class PreferencesActivity extends AppCompatPreferenceActivity {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     if (mLoginManager.isLoggedIn()) {
-                        AuthUI.getInstance(FirebaseApp.getInstance())
-                                .signOut(getActivity())
-                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        acctPref.setTitle(R.string.pref_account_login);
-                                        acctPref.setSummary(R.string.pref_account_login_summary);
-                                    }
-                                });
                     } else {
-                        startActivityForResult(
-                                AuthUI.getInstance(FirebaseApp.getInstance())
-                                        .createSignInIntentBuilder()
-                                        .setLogo(R.mipmap.ic_launcher)
-                                        .setProviders(AuthUI.EMAIL_PROVIDER, AuthUI.GOOGLE_PROVIDER)
-                                        .build(),
-                                RC_SIGN_IN);
                     }
                     return true;
                 }
@@ -274,8 +254,6 @@ public class PreferencesActivity extends AppCompatPreferenceActivity {
                 if (resultCode == RESULT_OK) {
                     PreferenceScreen acctPref = (PreferenceScreen) findPreference(getString(R.string.pref_account));
                     acctPref.setTitle(R.string.pref_account_logout);
-                    acctPref.setSummary(mLoginManager.getUser().getDisplayName());
-                    ((PreferencesActivity) getActivity()).mMetricsManager.logLogin(mLoginManager.getUser().getProviderId(), true);
                 }
             }
         }
